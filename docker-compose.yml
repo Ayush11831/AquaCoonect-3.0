@@ -1,0 +1,53 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: aquaconnect
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secure_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgres://admin:secure_password@postgres:5432/aquaconnect
+      REDIS_URL: redis://redis:6379
+      ML_SERVICE_URL: http://ml-service:5000
+    depends_on:
+      - postgres
+      - redis
+      - ml-service
+
+  ml-service:
+    build: ./ml-service
+    ports:
+      - "5000:5000"
+    environment:
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+      MODEL_PATH: /app/models
+    volumes:
+      - ./ml-service/models:/app/models
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

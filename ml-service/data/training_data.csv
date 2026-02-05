@@ -1,0 +1,11 @@
+# Sample training data format (ml-service/data/training_data.csv)
+# This would be generated from historical data and expert labeling
+
+"""
+latitude,longitude,issue_type,soil_type,rainfall,wind_speed,temperature,
+humidity,elevation,proximity_to_water,population_density,time_since_last_rain,
+actual_severity,priority_label
+23.2599,77.4126,water_logging,black_cotton,45.2,12.3,28.5,85,523.1,150,4500,2,high,0.85
+23.2456,77.4012,pipe_breakage,alluvial,0,8.7,32.1,65,512.3,1200,3800,120,medium,0.65
+...
+"""

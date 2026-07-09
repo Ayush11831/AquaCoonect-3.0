@@ -1,0 +1,12 @@
+{
+  "city": "Bhopal",
+  "note": "Coarse soil-zone reference points; nearest zone wins.",
+  "zones": [
+    { "name": "Old City / Chowk", "lat": 23.2657, "lon": 77.4020, "soil_type": "black_cotton" },
+    { "name": "New Market / TT Nagar", "lat": 23.2330, "lon": 77.4010, "soil_type": "black_cotton" },
+    { "name": "Kolar Road", "lat": 23.1780, "lon": 77.4230, "soil_type": "red" },
+    { "name": "Bairagarh", "lat": 23.2790, "lon": 77.3350, "soil_type": "alluvial" },
+    { "name": "Ayodhya Nagar", "lat": 23.2560, "lon": 77.4700, "soil_type": "black_cotton" },
+    { "name": "Misrod", "lat": 23.1670, "lon": 77.4790, "soil_type": "red" }
+  ]
+}

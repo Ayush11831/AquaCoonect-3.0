@@ -12,6 +12,16 @@ import {
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import axios from 'axios';
 
+// Lets the citizen drop/move the complaint pin by clicking the map.
+const LocationPicker = ({ position, onLocationSelect }) => {
+    useMapEvents({
+        click(e) {
+            onLocationSelect(e.latlng.lat, e.latlng.lng);
+        },
+    });
+    return <Marker position={position} />;
+};
+
 const ComplaintForm = () => {
     const [formData, setFormData] = useState({
         title: '',
@@ -64,7 +74,17 @@ const ComplaintForm = () => {
                 margin="normal"
                 required
             />
-            
+
+            <TextField
+                fullWidth
+                label="Description"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                margin="normal"
+                multiline
+                rows={3}
+            />
+
             <Select
                 fullWidth
                 value={formData.issue_type}
@@ -90,8 +110,9 @@ const ComplaintForm = () => {
                     <TileLayer
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    <LocationPicker 
-                        onLocationSelect={(lat, lng) => 
+                    <LocationPicker
+                        position={[formData.latitude, formData.longitude]}
+                        onLocationSelect={(lat, lng) =>
                             setFormData({...formData, latitude: lat, longitude: lng})
                         }
                     />

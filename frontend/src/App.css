@@ -1,0 +1,10 @@
+/* frontend/src/App.css */
+body {
+    margin: 0;
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+    background: #f5f7fa;
+}
+
+.leaflet-container {
+    border-radius: 8px;
+}

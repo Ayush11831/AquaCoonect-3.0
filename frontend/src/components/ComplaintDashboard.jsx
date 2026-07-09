@@ -93,6 +93,12 @@ const ComplaintDashboard = () => {
         if (score >= 40) return 'info';
         return 'success';
     };
+
+    const getStatusColor = (status) => {
+        if (status === 'resolved') return 'success';
+        if (status === 'in_progress') return 'info';
+        return 'default';
+    };
     
     const handleResolve = (id) => {
         setSelectedComplaint(complaints.find(c => c.id === id));
@@ -144,3 +150,5 @@ const ComplaintDashboard = () => {
         </Box>
     );
 };
+
+export default ComplaintDashboard;

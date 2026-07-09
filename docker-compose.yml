@@ -20,13 +20,14 @@ services:
       - "6379:6379"
 
   backend:
-    build: ./backend
+    build: ./backend/src
     ports:
       - "3001:3001"
     environment:
       DATABASE_URL: postgres://admin:secure_password@postgres:5432/aquaconnect
       REDIS_URL: redis://redis:6379
       ML_SERVICE_URL: http://ml-service:5000
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
     depends_on:
       - postgres
       - redis

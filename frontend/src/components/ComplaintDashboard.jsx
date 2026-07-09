@@ -125,7 +125,18 @@ const ComplaintDashboard = () => {
                 pageSize={10}
                 rowsPerPageOptions={[10, 25, 50]}
                 components={{ Toolbar: GridToolbar }}
-                sx={{ mt: 2 }}
+                sx={{
+                    mt: 2,
+                    border: 0,
+                    backgroundColor: 'transparent',
+                    '& .MuiDataGrid-columnHeaders': {
+                        backgroundColor: 'rgba(255,255,255,0.4)',
+                        borderRadius: 2,
+                    },
+                    '& .MuiDataGrid-cell': { borderColor: 'rgba(11,35,48,0.08)' },
+                    '& .MuiDataGrid-footerContainer': { borderColor: 'rgba(11,35,48,0.08)' },
+                    '& .MuiDataGrid-row:hover': { backgroundColor: 'rgba(255,255,255,0.35)' },
+                }}
             />
             
             {/* Response Dialog */}

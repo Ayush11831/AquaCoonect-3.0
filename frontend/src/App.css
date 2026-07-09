@@ -1,10 +1,14 @@
 /* frontend/src/App.css */
+/* Background, colors and fonts are driven by the MUI theme (src/theme.js). */
 body {
     margin: 0;
-    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
-    background: #f5f7fa;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
+/* Rounded, glass-framed Leaflet map. */
 .leaflet-container {
-    border-radius: 8px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 10px 30px rgba(4, 30, 45, 0.2);
 }

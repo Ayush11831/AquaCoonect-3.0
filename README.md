@@ -141,6 +141,26 @@ cd frontend && npm install && npm start
 
 The frontend dev server proxies `/api` to `localhost:3001`; in Docker, nginx proxies it to the backend container. The ML service needs no keys to run — it scores with rule-based + offline defaults out of the box.
 
+## Deployment
+
+The frontend is hosted on **Firebase Hosting**; the API + ML service + Postgres run on **Render** (Firebase Hosting can't run Postgres or long-lived containers).
+
+**Backend (Render)** — [render.yaml](render.yaml) is a Blueprint that provisions the API, the ML service, and a managed Postgres in one step. In the Render dashboard: **New + → Blueprint → this repo**. `JWT_SECRET` is generated, `DATABASE_URL` and `ML_SERVICE_URL` are wired between services automatically, and the API creates its schema on first boot. Set `OPENWEATHER_API_KEY` in the ML service if you want live weather (optional).
+
+**Frontend (Firebase Hosting)** — point the build at the deployed API, then deploy:
+
+```bash
+firebase use --add                                    # select your Firebase project
+cd frontend
+REACT_APP_API_URL=https://aquaconnect-api.onrender.com npm run build
+cd ..
+firebase deploy --only hosting
+```
+
+`firebase.json` serves `frontend/build` with an SPA rewrite. `REACT_APP_API_URL` is baked in at build time, so rebuild + redeploy whenever the backend URL changes. Add the Firebase Hosting domain to the Render API's allowed origins if you tighten CORS.
+
+> Render's free tier spins services down when idle; the first request after a cold start may hit the API's ML-timeout fallback score. Redis in `docker-compose` is unused today and is omitted from the hosted setup.
+
 ## Status
 
 AquaConnect is a portfolio / hackathon project. The three services are wired end-to-end and verified: the API and ML service pass their checks, the ML pipeline is exercised end-to-end (rule-based scoring, model training, and the `/predict/priority` endpoint), and the React client builds cleanly. Auth, uploads, and the officer workflow are implemented; production hardening (rate limiting, richer training data, real geospatial API keys) is left as clearly marked extension points.

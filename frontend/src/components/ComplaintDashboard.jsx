@@ -21,7 +21,7 @@ import {
     Visibility,
     Map as MapIcon
 } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../api';
 
 const ComplaintDashboard = () => {
     const [complaints, setComplaints] = useState([]);
@@ -83,7 +83,7 @@ const ComplaintDashboard = () => {
     }, []);
     
     const fetchComplaints = async () => {
-        const response = await axios.get('/api/complaints/list?sort_by=priority');
+        const response = await api.get('/api/complaints/list?sort_by=priority');
         setComplaints(response.data.data);
     };
     
@@ -106,7 +106,7 @@ const ComplaintDashboard = () => {
     };
     
     const submitResponse = async () => {
-        await axios.post(`/api/complaints/${selectedComplaint.id}/respond`, {
+        await api.post(`/api/complaints/${selectedComplaint.id}/respond`, {
             action_taken: responseText
         });
         setResponseDialog(false);

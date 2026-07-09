@@ -25,6 +25,11 @@ uploads/
 **/.env
 !**/.env.example
 
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
 # Editor / OS
 .DS_Store
 .idea/

@@ -10,7 +10,7 @@ import {
     CircularProgress 
 } from '@mui/material';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import axios from 'axios';
+import api from '../api';
 
 // Lets the citizen drop/move the complaint pin by clicking the map.
 const LocationPicker = ({ position, onLocationSelect }) => {
@@ -47,7 +47,7 @@ const ComplaintForm = () => {
         });
         
         try {
-            const response = await axios.post('/api/complaints/submit', formDataObj, {
+            const response = await api.post('/api/complaints/submit', formDataObj, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             

@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const config = require('./config/config');
+const { ensureSchema } = require('./config/initDb');
 const complaintRoutes = require('./routes/complaints');
 const userRoutes = require('./routes/users');
 
@@ -28,9 +29,16 @@ app.use((err, req, res, next) => {
 });
 
 if (require.main === module) {
-    app.listen(config.port, () => {
-        console.log(`AquaConnect API listening on port ${config.port}`);
-    });
+    // Ensure the schema exists, then start listening regardless — so the
+    // health check passes even if the DB is briefly unavailable at boot.
+    ensureSchema()
+        .then(() => console.log('Database schema ensured'))
+        .catch((err) => console.error('Schema init failed (continuing):', err.message))
+        .finally(() => {
+            app.listen(config.port, () => {
+                console.log(`AquaConnect API listening on port ${config.port}`);
+            });
+        });
 }
 
 module.exports = app;

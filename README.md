@@ -9,6 +9,8 @@ AquaConnect (built for Bhopal) closes the loop between residents and the water u
 ![Flask](https://img.shields.io/badge/ML-Flask%20%2B%20scikit--learn-000000?logo=flask&logoColor=white)
 ![Docker](https://img.shields.io/badge/Orchestration-Docker%20Compose-2496ED?logo=docker&logoColor=white)
 
+**Live:** [app](https://aquaconnect-6a6a8.web.app) (Firebase Hosting) · [API](https://aquaconnect-api.onrender.com/health) · [ML service](https://aquaconnect-ml.onrender.com/health) (both on Render — free tier, allow ~30–50s to wake from cold start).
+
 ## Engineering highlights
 
 - **ML-scored triage, not FIFO** — every complaint is scored 1–100 by a scikit-learn `RandomForestRegressor` over ten environmental features (issue type, soil, rainfall, wind, temperature, humidity, elevation, water proximity, population density, dry-spell length). The officer dashboard is sorted by score so the most hazardous issues surface first.
@@ -17,6 +19,7 @@ AquaConnect (built for Bhopal) closes the loop between residents and the water u
 - **Best-effort service boundary** — the API treats the ML service as non-critical: if it's slow or down, complaint submission still succeeds with a neutral fallback score rather than failing the citizen's request.
 - **Three-service architecture** — React SPA, Express/PostgreSQL API, and a Flask/scikit-learn model server, each independently Dockerised and wired together with one `docker-compose up`.
 - **Clean separation** — SQL-parameterised data models, JWT-guarded officer endpoints with role checks, multer image uploads with type/size limits, and a geospatial layer split into a `data_fetcher` (I/O) and a `feature_engineer` (encoding) so the model code stays pure.
+- **Premium glass UI** — a custom MUI theme ([frontend/src/theme.js](frontend/src/theme.js)): frosted-glass surfaces floating over a navy gradient, Inter typography, gradient CTAs, an interactive Leaflet map for pin-drop reporting, and a translucent priority-sorted data grid.
 
 ## System architecture
 
@@ -107,9 +110,14 @@ ml-service/
   models/train_model.py  # training entrypoint
   data/                  # soil map, water bodies, training CSV
 frontend/
+  src/theme.js            # navy "glass" MUI theme (frosted surfaces, gradient)
+  src/api.js              # axios instance (build-time REACT_APP_API_URL)
   src/components/         # ComplaintForm (map + photos), ComplaintDashboard (grid)
   src/App.jsx, index.js   # tabbed shell
+  public/favicon.svg      # water-drop site icon
   nginx.conf              # serves the build, proxies /api → backend
+firebase.json             # Firebase Hosting config (SPA rewrite)
+render.yaml               # Render Blueprint (API + ML + Postgres)
 database/init.sql         # schema + seed data
 docker-compose.yml        # postgres · redis · backend · ml-service · frontend
 ```
@@ -143,7 +151,13 @@ The frontend dev server proxies `/api` to `localhost:3001`; in Docker, nginx pro
 
 ## Deployment
 
-The frontend is hosted on **Firebase Hosting**; the API + ML service + Postgres run on **Render** (Firebase Hosting can't run Postgres or long-lived containers).
+The frontend is hosted on **Firebase Hosting**; the API + ML service + Postgres run on **Render** (Firebase Hosting can't run Postgres or long-lived containers). A live instance is deployed:
+
+| Layer | URL |
+|---|---|
+| App (Firebase Hosting) | https://aquaconnect-6a6a8.web.app |
+| API (Render) | https://aquaconnect-api.onrender.com |
+| ML service (Render) | https://aquaconnect-ml.onrender.com |
 
 **Backend (Render)** — [render.yaml](render.yaml) is a Blueprint that provisions the API, the ML service, and a managed Postgres in one step. In the Render dashboard: **New + → Blueprint → this repo**. `JWT_SECRET` is generated, `DATABASE_URL` and `ML_SERVICE_URL` are wired between services automatically, and the API creates its schema on first boot. Set `OPENWEATHER_API_KEY` in the ML service if you want live weather (optional).
 

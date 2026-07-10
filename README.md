@@ -19,7 +19,7 @@ AquaConnect (built for Bhopal) closes the loop between residents and the water u
 - **Best-effort service boundary** — the API treats the ML service as non-critical: if it's slow or down, complaint submission still succeeds with a neutral fallback score rather than failing the citizen's request.
 - **Three-service architecture** — React SPA, Express/PostgreSQL API, and a Flask/scikit-learn model server, each independently Dockerised and wired together with one `docker-compose up`.
 - **Clean separation** — SQL-parameterised data models, JWT-guarded officer endpoints with role checks, multer image uploads with type/size limits, and a geospatial layer split into a `data_fetcher` (I/O) and a `feature_engineer` (encoding) so the model code stays pure.
-- **Premium glass UI** — a custom MUI theme ([frontend/src/theme.js](frontend/src/theme.js)): frosted-glass surfaces floating over a navy gradient, Inter typography, gradient CTAs, an interactive Leaflet map for pin-drop reporting, and a translucent priority-sorted data grid.
+- **React client** — a Material UI single-page app with a centralized theme layer ([frontend/src/theme.js](frontend/src/theme.js)), an interactive Leaflet map for geotagged pin-drop reporting, a sortable priority data grid for officers, and a build-time-configurable API base URL so the static bundle can target any backend origin.
 
 ## System architecture
 
@@ -110,7 +110,7 @@ ml-service/
   models/train_model.py  # training entrypoint
   data/                  # soil map, water bodies, training CSV
 frontend/
-  src/theme.js            # navy "glass" MUI theme (frosted surfaces, gradient)
+  src/theme.js            # centralized MUI theme (palette, typography, components)
   src/api.js              # axios instance (build-time REACT_APP_API_URL)
   src/components/         # ComplaintForm (map + photos), ComplaintDashboard (grid)
   src/App.jsx, index.js   # tabbed shell
@@ -151,29 +151,32 @@ The frontend dev server proxies `/api` to `localhost:3001`; in Docker, nginx pro
 
 ## Deployment
 
-The frontend is hosted on **Firebase Hosting**; the API + ML service + Postgres run on **Render** (Firebase Hosting can't run Postgres or long-lived containers). A live instance is deployed:
+AquaConnect is deployed and running across two platforms:
 
-| Layer | URL |
-|---|---|
-| App (Firebase Hosting) | https://aquaconnect-6a6a8.web.app |
-| API (Render) | https://aquaconnect-api.onrender.com |
-| ML service (Render) | https://aquaconnect-ml.onrender.com |
+| Layer | Host | URL |
+|---|---|---|
+| Frontend (SPA) | Firebase Hosting | https://aquaconnect-6a6a8.web.app |
+| API | Render | https://aquaconnect-api.onrender.com |
+| ML service | Render | https://aquaconnect-ml.onrender.com |
+| Postgres | Render (managed) | — |
 
-**Backend (Render)** — [render.yaml](render.yaml) is a Blueprint that provisions the API, the ML service, and a managed Postgres in one step. In the Render dashboard: **New + → Blueprint → this repo**. `JWT_SECRET` is generated, `DATABASE_URL` and `ML_SERVICE_URL` are wired between services automatically, and the API creates its schema on first boot. Set `OPENWEATHER_API_KEY` in the ML service if you want live weather (optional).
+The split exists because Firebase Hosting serves static sites only — it can't run Postgres or long-lived containers, so the API, ML service, and database live on Render. The backend was provisioned from [render.yaml](render.yaml) as a single Blueprint: `JWT_SECRET` is generated, `DATABASE_URL` and `ML_SERVICE_URL` are wired between the services automatically, and the API creates its schema on first boot. The static frontend reaches the API because `frontend/src/api.js` bakes in a build-time `REACT_APP_API_URL`; `firebase.json` serves `frontend/build` with an SPA rewrite.
 
-**Frontend (Firebase Hosting)** — point the build at the deployed API, then deploy:
+> Render's free tier sleeps idle services, so the first request after a lull takes ~30–50s to wake — during which a complaint submission may fall back to the API's neutral ML-timeout score. Redis appears in `docker-compose` but is unused, and is omitted from the hosted setup.
+
+<details>
+<summary>Redeploying</summary>
+
+The backend auto-deploys from the Blueprint on push to the repo. The frontend is rebuilt with the API URL and shipped to Firebase:
 
 ```bash
-firebase use --add                                    # select your Firebase project
 cd frontend
 REACT_APP_API_URL=https://aquaconnect-api.onrender.com npm run build
 cd ..
 firebase deploy --only hosting
 ```
 
-`firebase.json` serves `frontend/build` with an SPA rewrite. `REACT_APP_API_URL` is baked in at build time, so rebuild + redeploy whenever the backend URL changes. Add the Firebase Hosting domain to the Render API's allowed origins if you tighten CORS.
-
-> Render's free tier spins services down when idle; the first request after a cold start may hit the API's ML-timeout fallback score. Redis in `docker-compose` is unused today and is omitted from the hosted setup.
+</details>
 
 ## Status
 

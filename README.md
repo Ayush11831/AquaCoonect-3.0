@@ -159,7 +159,7 @@ The frontend is hosted on **Firebase Hosting**; the API + ML service + Postgres 
 | API (Render) | https://aquaconnect-api.onrender.com |
 | ML service (Render) | https://aquaconnect-ml.onrender.com |
 
-**Backend (Render)** — [render.yaml](render.yaml) is a Blueprint that provisions the API, the ML service, and a managed Postgres in one step. In the Render dashboard: **New + → Blueprint → this repo**. `JWT_SECRET` is generated, `DATABASE_URL` and `ML_SERVICE_URL` are wired between services automatically, and the API creates its schema on first boot. Set `OPENWEATHER_API_KEY` in the ML service if you want live weather (optional).
+**Backend (Render)** — [render.yaml](render.yaml) is a Blueprint that provisions the API, the ML service, and a managed Postgres in one step. In the Render dashboard: **New + → Blueprint → this repo**. `JWT_SECRET` is generated, `DATABASE_URL` and `ML_SERVICE_URL` are wired between services automatically, and the API creates its schema on first boot.
 
 **Frontend (Firebase Hosting)** — point the build at the deployed API, then deploy:
 

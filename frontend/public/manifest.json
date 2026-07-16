@@ -1,0 +1,16 @@
+{
+  "short_name": "AquaConnect",
+  "name": "AquaConnect — Bhopal Water Issues",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0a1c3d",
+  "background_color": "#0a1c3d"
+}

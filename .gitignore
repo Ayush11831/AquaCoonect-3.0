@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Trained model artifacts (regenerate with models/train_model.py)
+ml-service/models/*.pkl
+
+# Builds
+frontend/build/
+dist/
+
+# Uploaded complaint images
+backend/src/uploads/
+uploads/
+
+# Environment / secrets
+.env
+**/.env
+!**/.env.example
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.log

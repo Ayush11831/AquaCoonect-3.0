@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Upper Lake (Bhojtal)" },
+      "geometry": { "type": "Point", "coordinates": [77.3560, 23.2560] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Lower Lake (Chhota Talab)" },
+      "geometry": { "type": "Point", "coordinates": [77.4090, 23.2560] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Shahpura Lake" },
+      "geometry": { "type": "Point", "coordinates": [77.4360, 23.1930] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Kaliasot Dam" },
+      "geometry": { "type": "Point", "coordinates": [77.4200, 23.1810] }
+    }
+  ]
+}

@@ -21,7 +21,7 @@ import {
     Visibility,
     Map as MapIcon
 } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../api';
 
 const ComplaintDashboard = () => {
     const [complaints, setComplaints] = useState([]);
@@ -83,7 +83,7 @@ const ComplaintDashboard = () => {
     }, []);
     
     const fetchComplaints = async () => {
-        const response = await axios.get('/api/complaints/list?sort_by=priority');
+        const response = await api.get('/api/complaints/list?sort_by=priority');
         setComplaints(response.data.data);
     };
     
@@ -93,6 +93,12 @@ const ComplaintDashboard = () => {
         if (score >= 40) return 'info';
         return 'success';
     };
+
+    const getStatusColor = (status) => {
+        if (status === 'resolved') return 'success';
+        if (status === 'in_progress') return 'info';
+        return 'default';
+    };
     
     const handleResolve = (id) => {
         setSelectedComplaint(complaints.find(c => c.id === id));
@@ -100,7 +106,7 @@ const ComplaintDashboard = () => {
     };
     
     const submitResponse = async () => {
-        await axios.post(`/api/complaints/${selectedComplaint.id}/respond`, {
+        await api.post(`/api/complaints/${selectedComplaint.id}/respond`, {
             action_taken: responseText
         });
         setResponseDialog(false);
@@ -119,7 +125,18 @@ const ComplaintDashboard = () => {
                 pageSize={10}
                 rowsPerPageOptions={[10, 25, 50]}
                 components={{ Toolbar: GridToolbar }}
-                sx={{ mt: 2 }}
+                sx={{
+                    mt: 2,
+                    border: 0,
+                    backgroundColor: 'transparent',
+                    '& .MuiDataGrid-columnHeaders': {
+                        backgroundColor: 'rgba(255,255,255,0.4)',
+                        borderRadius: 2,
+                    },
+                    '& .MuiDataGrid-cell': { borderColor: 'rgba(11,35,48,0.08)' },
+                    '& .MuiDataGrid-footerContainer': { borderColor: 'rgba(11,35,48,0.08)' },
+                    '& .MuiDataGrid-row:hover': { backgroundColor: 'rgba(255,255,255,0.35)' },
+                }}
             />
             
             {/* Response Dialog */}
@@ -144,3 +161,5 @@ const ComplaintDashboard = () => {
         </Box>
     );
 };
+
+export default ComplaintDashboard;

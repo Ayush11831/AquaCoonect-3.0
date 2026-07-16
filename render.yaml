@@ -1,0 +1,51 @@
+# render.yaml — Render Blueprint for the AquaConnect backend.
+# Deploys the ML service, the API, and a managed Postgres. The React frontend
+# is hosted separately on Firebase Hosting.
+#
+# In the Render dashboard: New + -> Blueprint -> pick this repo. Render creates
+# all three. After the first deploy, copy the API service URL and use it as
+# REACT_APP_API_URL when building the frontend.
+
+databases:
+  - name: aquaconnect-db
+    databaseName: aquaconnect
+    user: admin
+    plan: free
+
+services:
+  # --- ML priority-scoring service (Flask + scikit-learn) ------------------
+  - type: web
+    name: aquaconnect-ml
+    runtime: docker
+    dockerfilePath: ./ml-service/Dockerfile
+    dockerContext: ./ml-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # Optional. Without it the scorer uses offline environmental defaults.
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: MODEL_PATH
+        value: /app/models
+
+  # --- Express API ---------------------------------------------------------
+  - type: web
+    name: aquaconnect-api
+    runtime: docker
+    dockerfilePath: ./backend/src/Dockerfile
+    dockerContext: ./backend/src
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aquaconnect-db
+          property: connectionString
+      # Render injects the ML service hostname; the API prepends https:// itself.
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: aquaconnect-ml
+          property: host
+      - key: JWT_SECRET
+        generateValue: true

@@ -20,3 +20,13 @@ module.exports = {
     uploadDir: process.env.UPLOAD_DIR || 'uploads',
     maxImageCount: 5,
 };
+console.log('Configuration loaded:', {
+    port: module.exports.port,
+    databaseUrl: module.exports.databaseUrl,
+    redisUrl: module.exports.redisUrl,
+    mlServiceUrl: module.exports.mlServiceUrl,
+    jwtSecret: module.exports.jwtSecret ? '***' : null, // Hide secret in logs
+    jwtExpiresIn: module.exports.jwtExpiresIn,
+    uploadDir: module.exports.uploadDir,
+    maxImageCount: module.exports.maxImageCount,
+});

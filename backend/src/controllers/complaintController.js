@@ -1,18 +1,10 @@
 // backend/src/controllers/complaintController.js
-const { Complaint, Response } = require('../models/complaints');
+const { Complaint, EnvironmentalData } = require('../models/complaints');
 const { callMLService } = require('../services/mlService');
 
 async function submitComplaint(req, res) {
     try {
         const { title, description, issue_type, latitude, longitude, address } = req.body;
-
-        if (!title || !issue_type || latitude === undefined || longitude === undefined) {
-            return res.status(400).json({
-                success: false,
-                error: 'title, issue_type, latitude and longitude are required',
-            });
-        }
-
         const images = (req.files || []).map((img) => img.path);
 
         // 1. Persist the complaint.
@@ -38,6 +30,14 @@ async function submitComplaint(req, res) {
         // 3. Store the score.
         const updated = await Complaint.setPriority(complaint.id, ml.priority_score);
 
+        // 4. Store environmental data if available.
+        if (ml.environmental_data) {
+            await EnvironmentalData.create({
+                complaint_id: complaint.id,
+                ...ml.environmental_data
+            });
+        }
+
         return res.status(201).json({
             success: true,
             data: updated,
@@ -50,10 +50,47 @@ async function submitComplaint(req, res) {
     }
 }
 
+async function getComplaint(req, res) {
+    try {
+        const { id } = req.params;
+        const complaint = await Complaint.getById(id);
+        if (!complaint) {
+            return res.status(404).json({ success: false, error: 'Complaint not found' });
+        }
+        return res.json({ success: true, data: complaint });
+    } catch (err) {
+        console.error('getComplaint error:', err.message);
+        return res.status(500).json({ success: false, error: 'Failed to fetch complaint' });
+    }
+}
+
+async function getMyComplaints(req, res) {
+    try {
+        const { page = 1, limit = 20 } = req.query;
+        const parsedPage = parseInt(page, 10) || 1;
+        const parsedLimit = Math.min(parseInt(limit, 10) || 20, 100);
+        const { rows, total, totalPages, hasMore } = await Complaint.listByUser(req.user.id, { 
+            page: parsedPage, 
+            limit: parsedLimit 
+        });
+        return res.json({
+            success: true,
+            data: rows,
+            page: parsedPage,
+            total,
+            totalPages,
+            hasMore
+        });
+    } catch (err) {
+        console.error('getMyComplaints error:', err.message);
+        return res.status(500).json({ success: false, error: 'Failed to fetch user complaints' });
+    }
+}
+
 async function listComplaints(req, res) {
     try {
         const { sort_by = 'priority', status, page = 1, limit = 20 } = req.query;
-        const { rows, total } = await Complaint.list({
+        const { rows, total, totalPages, hasMore } = await Complaint.list({
             status,
             sortBy: sort_by,
             page: parseInt(page, 10),
@@ -65,6 +102,8 @@ async function listComplaints(req, res) {
             data: rows,
             page: parseInt(page, 10),
             total,
+            totalPages,
+            hasMore
         });
     } catch (err) {
         console.error('listComplaints error:', err.message);
@@ -75,21 +114,23 @@ async function listComplaints(req, res) {
 async function respondToComplaint(req, res) {
     try {
         const { id } = req.params;
-        const { action_taken, images = [] } = req.body;
+        const { action_taken } = req.body;
+        const images = (req.files || []).map((img) => img.path);
 
         const complaint = await Complaint.findById(id);
         if (!complaint) {
             return res.status(404).json({ success: false, error: 'Complaint not found' });
         }
+        if (complaint.status === 'resolved') {
+            return res.status(409).json({ success: false, error: 'Complaint is already resolved' });
+        }
 
-        const response = await Response.create({
-            complaint_id: id,
-            officer_id: req.user.id,
-            action_taken,
-            image_urls: images,
+        const response = await Complaint.respond({
+            complaintId: id,
+            officerId: req.user.id,
+            actionTaken: action_taken,
+            imageUrls: images,
         });
-
-        await Complaint.updateStatus(id, 'resolved');
 
         return res.json({ success: true, data: response });
     } catch (err) {
@@ -98,4 +139,22 @@ async function respondToComplaint(req, res) {
     }
 }
 
-module.exports = { submitComplaint, listComplaints, respondToComplaint };
+async function updateStatus(req, res) {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const complaint = await Complaint.findById(id);
+        if (!complaint) {
+            return res.status(404).json({ success: false, error: 'Complaint not found' });
+        }
+
+        const updated = await Complaint.updateStatus(id, status);
+        return res.json({ success: true, data: updated });
+    } catch (err) {
+        console.error('updateStatus error:', err.message);
+        return res.status(500).json({ success: false, error: 'Failed to update status' });
+    }
+}
+
+module.exports = { submitComplaint, getComplaint, getMyComplaints, listComplaints, respondToComplaint, updateStatus };

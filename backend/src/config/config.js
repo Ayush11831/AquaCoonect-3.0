@@ -10,6 +10,8 @@ function normalizeUrl(value, fallback) {
 
 module.exports = {
     port: parseInt(process.env.PORT, 10) || 3001,
+    nodeEnv: process.env.NODE_ENV || 'development',
+    corsOrigins: process.env.CORS_ORIGINS || '*',
     databaseUrl:
         process.env.DATABASE_URL ||
         'postgres://admin:secure_password@localhost:5432/aquaconnect',
@@ -22,7 +24,7 @@ module.exports = {
 };
 console.log('Configuration loaded:', {
     port: module.exports.port,
-    databaseUrl: module.exports.databaseUrl,
+    databaseUrl: module.exports.databaseUrl ? module.exports.databaseUrl.replace(/\/\/[^@]+@/, '//***@') : null,
     redisUrl: module.exports.redisUrl,
     mlServiceUrl: module.exports.mlServiceUrl,
     jwtSecret: module.exports.jwtSecret ? '***' : null, // Hide secret in logs

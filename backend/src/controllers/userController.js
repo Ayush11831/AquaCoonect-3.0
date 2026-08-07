@@ -12,12 +12,6 @@ function signToken(user) {
 async function register(req, res) {
     try {
         const { username, email, phone, password, role } = req.body;
-        if (!username || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                error: 'username, email and password are required',
-            });
-        }
 
         const existing = await User.findByEmail(email);
         if (existing) {
@@ -51,9 +45,28 @@ async function login(req, res) {
 }
 
 async function me(req, res) {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
-    return res.json({ success: true, data: user });
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+        return res.json({ success: true, data: user });
+    } catch (err) {
+        console.error('me error:', err.message);
+        return res.status(500).json({ success: false, error: 'Failed to fetch user profile' });
+    }
 }
 
-module.exports = { register, login, me };
+async function updateProfile(req, res) {
+    try {
+        const { username, phone } = req.body;
+        const updated = await User.update(req.user.id, { username, phone });
+        if (!updated) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        return res.json({ success: true, data: updated });
+    } catch (err) {
+        console.error('updateProfile error:', err.message);
+        return res.status(500).json({ success: false, error: 'Failed to update profile' });
+    }
+}
+
+module.exports = { register, login, me, updateProfile };

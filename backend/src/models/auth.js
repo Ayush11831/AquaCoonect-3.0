@@ -31,6 +31,38 @@ const User = {
         if (!user || !user.password_hash) return false;
         return bcrypt.compare(password, user.password_hash);
     },
+
+    async update(id, { username, phone }) {
+        const updates = [];
+        const values = [id];
+        
+        if (username !== undefined) {
+            values.push(username);
+            updates.push(`username = $${values.length}`);
+        }
+        
+        if (phone !== undefined) {
+            values.push(phone);
+            updates.push(`phone = $${values.length}`);
+        }
+        
+        if (updates.length === 0) {
+            const result = await query(
+                'SELECT id, username, email, phone, role, created_at FROM users WHERE id = $1',
+                [id]
+            );
+            return result.rows[0] || null;
+        }
+        
+        const result = await query(
+            `UPDATE users 
+             SET ${updates.join(', ')} 
+             WHERE id = $1 
+             RETURNING id, username, email, phone, role, created_at`,
+            values
+        );
+        return result.rows[0] || null;
+    },
 };
 
 module.exports = { User };

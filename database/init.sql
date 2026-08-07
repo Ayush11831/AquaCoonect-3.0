@@ -9,44 +9,62 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) UNIQUE,
     phone VARCHAR(15),
     password_hash VARCHAR(255),
-    role VARCHAR(20) DEFAULT 'citizen',          -- citizen | officer | admin
+    role VARCHAR(20) DEFAULT 'citizen' CONSTRAINT chk_users_role CHECK (role IN ('citizen', 'officer', 'admin')),          -- citizen | officer | admin
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Complaints
 CREATE TABLE IF NOT EXISTS complaints (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    title VARCHAR(200),
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    title VARCHAR(200) NOT NULL,
     description TEXT,
-    issue_type VARCHAR(50),                      -- pipe_breakage | water_leakage | water_logging | contamination | low_pressure
-    latitude DECIMAL(10, 8),
-    longitude DECIMAL(11, 8),
+    issue_type VARCHAR(50) NOT NULL,                      -- pipe_breakage | water_leakage | water_logging | contamination | low_pressure
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
     address TEXT,
     image_urls TEXT[],
-    status VARCHAR(20) DEFAULT 'pending',        -- pending | in_progress | resolved
-    priority_score INTEGER,                      -- 1-100 from the ML model
+    status VARCHAR(20) DEFAULT 'pending' CONSTRAINT chk_complaints_status CHECK (status IN ('pending', 'in_progress', 'resolved')),        -- pending | in_progress | resolved
+    priority_score INTEGER CONSTRAINT chk_complaints_priority_score CHECK (priority_score BETWEEN 1 AND 100),                      -- 1-100 from the ML model
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_complaints_priority ON complaints (priority_score DESC);
 CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints (status);
+CREATE INDEX IF NOT EXISTS idx_complaints_user_id ON complaints (user_id);
+CREATE INDEX IF NOT EXISTS idx_complaints_issue_type ON complaints (issue_type);
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS trg_complaints_updated_at ON complaints;
+CREATE TRIGGER trg_complaints_updated_at
+BEFORE UPDATE ON complaints
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
 -- Government responses
 CREATE TABLE IF NOT EXISTS responses (
     id SERIAL PRIMARY KEY,
-    complaint_id INTEGER REFERENCES complaints(id),
-    officer_id INTEGER REFERENCES users(id),
+    complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE,
+    officer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     action_taken TEXT,
     image_urls TEXT[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_responses_complaint_id ON responses (complaint_id);
+
 -- Environmental factors (captured per complaint for ML training)
 CREATE TABLE IF NOT EXISTS environmental_data (
     id SERIAL PRIMARY KEY,
-    complaint_id INTEGER REFERENCES complaints(id),
+    complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE,
     soil_type VARCHAR(50),
     rainfall_mm DECIMAL(5,2),
     wind_speed_kmh DECIMAL(5,2),

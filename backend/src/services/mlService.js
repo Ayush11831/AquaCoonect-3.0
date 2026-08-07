@@ -9,7 +9,7 @@ const config = require('../config/config');
  * just because the model is down.
  *
  * @param {{latitude:number, longitude:number, issue_type:string}} payload
- * @returns {Promise<{priority_score:number, risk_level?:string}>}
+ * @returns {Promise<{priority_score:number, risk_level?:string, environmental_data?:any}>}
  */
 async function callMLService(payload) {
     try {
@@ -21,7 +21,7 @@ async function callMLService(payload) {
         return data;
     } catch (err) {
         console.error('ML service unavailable, using fallback score:', err.message);
-        return { priority_score: 50, risk_level: 'MEDIUM', fallback: true };
+        return { priority_score: 50, risk_level: 'MEDIUM', fallback: true, environmental_data: null };
     }
 }
 

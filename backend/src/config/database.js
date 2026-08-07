@@ -14,7 +14,22 @@ pool.on('error', (err) => {
     console.error('Unexpected Postgres pool error:', err.message);
 });
 
+const healthCheck = async () => {
+    try {
+        await pool.query('SELECT 1');
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+const close = async () => {
+    await pool.end();
+};
+
 module.exports = {
     pool,
     query: (text, params) => pool.query(text, params),
+    healthCheck,
+    close,
 };
